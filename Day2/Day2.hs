@@ -4,7 +4,6 @@ main::IO()
 main = do
     fileData <- readFile "./day2inp.txt"
     print (checkValidTotal (interpritFile fileData))
-    print (remove [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] 9)
 
 interpritFile :: String -> [[Int]]
 interpritFile cont =
@@ -18,26 +17,27 @@ checkValid :: [Int] -> Int
 checkValid level = go level 1 (getDirection level)
     where
         go :: [Int] -> Int -> Int -> Int
-        go l valid upOrDown
+        go (x : y : xs) valid upOrDown
           | valid == 0 = 0
-          | null (drop 1 l) = valid
-          | checkValidPair l upOrDown = 0
-          | otherwise = go (tail l) 1 upOrDown
+          | checkValidPair (x : y : xs) upOrDown = 0
+          | otherwise = go (y : xs) 1 upOrDown
+        go _ valid _ = valid
 
 checkValidPair :: [Int] -> Int -> Bool
-checkValidPair l upOrDown =
-    let dif = (l !! 1) - head l
+checkValidPair (x : y : _) upOrDown =
+    let dif = y - x
     in (dif * upOrDown) > 3 || (dif * upOrDown) < 1
+checkValidPair _ _ = True
 
 checkValidWithRemoval :: [Int] -> Int
 checkValidWithRemoval level = go level 1 (getDirection level)
     where
         go :: [Int] -> Int -> Int -> Int
-        go l valid upOrDown
+        go (x : y : xs) valid upOrDown
           | valid == 0 = 0
-          | null (drop 1 l) = valid
-          | checkValidPair l upOrDown = tryRemoval l level
-          | otherwise = go (tail l) 1 upOrDown
+          | checkValidPair (x : y : xs) upOrDown = tryRemoval (x : y : xs) level
+          | otherwise = go (y : xs) 1 upOrDown
+        go _ valid _ = valid
 
 tryRemoval :: [Int] -> [Int] -> Int
 tryRemoval l level
@@ -57,11 +57,10 @@ getDirection record =
     else 1
     where
         go :: [Int] -> (Int, Int) -> (Int, Int)
-        go l prev
-            | null (drop 1 l) = prev
-            | getDirectionPair (head l) (l !! 1) == 1 = go (tail l) (fst prev, snd prev + 1)
-            | getDirectionPair (head l) (l !! 1) == -1 = go (tail l) (fst prev + 1, snd prev)
-
+        go (x : y : xs) prev
+            | getDirectionPair x y == 1 = go (y : xs) (fst prev, snd prev + 1)
+            | getDirectionPair x y == -1 = go (y : xs) (fst prev + 1, snd prev)
+        go _ prev = prev
 
 getDirectionPair :: Int -> Int -> Int
 getDirectionPair one two =
