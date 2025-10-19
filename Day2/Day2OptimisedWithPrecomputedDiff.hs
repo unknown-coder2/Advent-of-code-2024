@@ -15,7 +15,7 @@ interpritFile cont =
     in map (map read) inter
 
 checkValidTotal :: [[Int]] -> Int
-checkValidTotal records = sum (map checkValidWithRemoval records)
+checkValidTotal records = sum (map (checkValidWithRemoval . getDiff) records)
 
 checkValid :: [Int] -> Int
 checkValid level = go level 1 (getDirection level)
@@ -37,26 +37,27 @@ checkValidWithRemoval level = go level 1 (getDirection level)
         go :: [Int] -> Int -> Int -> Int
         go (x : xs) valid upOrDown
           | valid == 0 = 0
-          | checkValidPair (x : xs) upOrDown = tryRemoval (x : xs) level
+          | checkValidPair (x : xs) upOrDown = tryRemoval level (length level) (length (x : xs))
           | otherwise = go xs 1 upOrDown
         go _ valid _ = valid
 
-tryRemoval :: [Int] -> [Int] -> Int
-tryRemoval l level = go (length level - length l)
-    where
-        go :: Int -> Int
-        go idx
-            | checkValid (drop (idx - 1) level) == 1 = 1
-            | checkValid (drop idx level) == 1 = 1
-            | otherwise = 0
+tryRemoval :: [Int] -> Int -> Int -> Int
+tryRemoval level levLen 1 = 1
+tryRemoval level levLen tailLen = 
+    let idx = levLen - tailLen
+    in if checkValid (remove level idx) == 1 || checkValid (remove level (idx + 1)) == 1
+        then 1
+        else 0
 
-remove :: [Int] -> Int -> Int -> [Int]
-remove l idx1 idx2 = 
-    let sum_ = (l !! idx1) + (l !! idx2)
-    in take idx1 l ++ sum_ : drop (idx2 + 1) l
+remove :: [Int] -> Int -> [Int]
+remove l 0 = 
+    drop 1 l
+remove l idx =
+    let sum_ = (l !! (idx - 1)) + (l !! idx)
+    in take (idx - 1) l ++ sum_ : drop (idx + 1) l
 
 getDirection :: [Int] -> Int
-getDirection record = 
+getDirection record =
     let value = signum (sum (map signum record))
     in if value == 0
         then 1
